@@ -11,11 +11,21 @@ main =
             [ h1 [] [ text "Picshare" ]
             ]
         , div [ class "content-flow" ]
-            [ div [ class "detailed-photo" ]
-                [ img [ src "https://programming-elm.com/1.jpg" ] []
-                , div [ class "photo-info" ]
-                    [ h2 [ class "caption" ] [ text "Surfing" ]
-                    ]
-                ]
+            [ viewDetailedPhoto (baseUrl ++ "1.jpg") "Surfer"
+            ]
+        ]
+
+
+baseUrl : String
+baseUrl =
+    "https://programming-elm.com/"
+
+
+viewDetailedPhoto : String -> String -> Html msg
+viewDetailedPhoto url caption =
+    div [ class "detailed-photo" ]
+        [ img [ src url ] []
+        , div [ class "photo-info" ]
+            [ h2 [ class "caption" ] [ text caption ]
             ]
         ]
