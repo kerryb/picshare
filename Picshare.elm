@@ -12,6 +12,8 @@ main =
             ]
         , div [ class "content-flow" ]
             [ viewDetailedPhoto (baseUrl ++ "1.jpg") "Surfer"
+            , viewDetailedPhoto (baseUrl ++ "2.jpg") "The fox"
+            , viewDetailedPhoto (baseUrl ++ "3.jpg") "Evening"
             ]
         ]
 
