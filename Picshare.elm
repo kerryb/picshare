@@ -19,8 +19,7 @@ type alias Model =
 
 
 type Msg
-    = Like
-    | Unlike
+    = ToggleLike
 
 
 initialModel : Model
@@ -37,11 +36,8 @@ update :
     -> Model
 update msg model =
     case msg of
-        Like ->
-            { model | liked = True }
-
-        Unlike ->
-            { model | liked = False }
+        ToggleLike ->
+            { model | liked = not model.liked }
 
 
 view : Model -> Html Msg
@@ -64,18 +60,12 @@ viewDetailedPhoto model =
                 "fa-heart"
             else
                 "fa-heart-o"
-
-        msg =
-            if model.liked then
-                Unlike
-            else
-                Like
     in
         div [ class "detailed-photo" ]
             [ img [ src model.url ] []
             , div [ class "photo-info" ]
                 [ div [ class "like-button" ]
-                    [ i [ class "fa fa-2x", class buttonClass, onClick msg ] []
+                    [ i [ class "fa fa-2x", class buttonClass, onClick ToggleLike ] []
                     ]
                 , h2 [ class "caption" ] [ text model.caption ]
                 ]
