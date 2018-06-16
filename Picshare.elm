@@ -1,7 +1,7 @@
 module Picshare exposing (main)
 
 import Html exposing (..)
-import Html.Attributes exposing (class, placeholder, src, type_, value)
+import Html.Attributes exposing (class, disabled, placeholder, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 
 
@@ -119,7 +119,7 @@ viewComments model =
                 , onInput UpdateComment
                 ]
                 []
-            , button [] [ text "Save" ]
+            , button [ disabled (String.isEmpty model.newComment) ] [ text "Save" ]
             ]
         ]
 
