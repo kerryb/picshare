@@ -1,7 +1,7 @@
 module Picshare exposing (main)
 
 import Html exposing (Html, beginnerProgram, div, i, img, h1, h2, text)
-import Html.Attributes exposing (class, src)
+import Html.Attributes exposing (class, placeholder, src, type_)
 import Html.Events exposing (onClick)
 
 
@@ -15,7 +15,10 @@ main =
 
 
 type alias Model =
-    { url : String, caption : String, liked : Bool }
+    { url : String
+    , caption : String
+    , liked : Bool
+    }
 
 
 type Msg
@@ -54,6 +57,17 @@ view model =
 
 viewDetailedPhoto : Model -> Html Msg
 viewDetailedPhoto model =
+    div [ class "detailed-photo" ]
+        [ img [ src model.url ] []
+        , div [ class "photo-info" ]
+            [ viewLikeButton model
+            , h2 [ class "caption" ] [ text model.caption ]
+            ]
+        ]
+
+
+viewLikeButton : Model -> Html Msg
+viewLikeButton model =
     let
         buttonClass =
             if model.liked then
@@ -61,14 +75,8 @@ viewDetailedPhoto model =
             else
                 "fa-heart-o"
     in
-        div [ class "detailed-photo" ]
-            [ img [ src model.url ] []
-            , div [ class "photo-info" ]
-                [ div [ class "like-button" ]
-                    [ i [ class "fa fa-2x", class buttonClass, onClick ToggleLike ] []
-                    ]
-                , h2 [ class "caption" ] [ text model.caption ]
-                ]
+        div [ class "like-button" ]
+            [ i [ class "fa fa-2x", class buttonClass, onClick ToggleLike ] []
             ]
 
 
