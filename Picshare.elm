@@ -1,6 +1,6 @@
 module Picshare exposing (main)
 
-import Html exposing (Html, beginnerProgram, div, i, img, h1, h2, text)
+import Html exposing (..)
 import Html.Attributes exposing (class, placeholder, src, type_)
 import Html.Events exposing (onClick)
 
@@ -18,6 +18,8 @@ type alias Model =
     { url : String
     , caption : String
     , liked : Bool
+    , comments : List String
+    , newComment : String
     }
 
 
@@ -30,6 +32,8 @@ initialModel =
     { url = baseUrl ++ "1.jpg"
     , caption = "Surfer"
     , liked = False
+    , comments = [ "First!" ]
+    , newComment = ""
     }
 
 
@@ -62,6 +66,7 @@ viewDetailedPhoto model =
         , div [ class "photo-info" ]
             [ viewLikeButton model
             , h2 [ class "caption" ] [ text model.caption ]
+            , viewComments model
             ]
         ]
 
@@ -78,6 +83,32 @@ viewLikeButton model =
         div [ class "like-button" ]
             [ i [ class "fa fa-2x", class buttonClass, onClick ToggleLike ] []
             ]
+
+
+viewComments : Model -> Html Msg
+viewComments model =
+    div []
+        [ viewCommentList model.comments
+        , form [ class "new-comment" ]
+            [ input [ type_ "text", placeholder "Add a comment" ] []
+            , button [] [ text "Save" ]
+            ]
+        ]
+
+
+viewCommentList : List String -> Html Msg
+viewCommentList comments =
+    div [ class "comments" ]
+        [ ul [] (List.map viewComment comments)
+        ]
+
+
+viewComment : String -> Html Msg
+viewComment comment =
+    li []
+        [ strong [] [ text "Comment: " ]
+        , text comment
+        ]
 
 
 baseUrl : String
