@@ -3,6 +3,8 @@ module Picshare exposing (main)
 import Html exposing (..)
 import Html.Attributes exposing (class, disabled, placeholder, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Json.Decode exposing (Decoder, bool, int, list, string)
+import Json.Decode.Pipeline exposing (decode, hardcoded, required)
 
 
 main : Program Never Model Msg
@@ -26,6 +28,17 @@ type alias Photo =
     , comments : List String
     , newComment : String
     }
+
+
+photoDecoder : Decoder Photo
+photoDecoder =
+    decode Photo
+        |> required "id" int
+        |> required "url" string
+        |> required "caption" string
+        |> required "liked" bool
+        |> required "comments" (list string)
+        |> hardcoded ""
 
 
 type alias Model =
