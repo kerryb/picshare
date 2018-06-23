@@ -48,7 +48,9 @@ photoDecoder =
 
 
 type alias Model =
-    { feed : Maybe Feed }
+    { feed : Maybe Feed
+    , error : Maybe Http.Error
+    }
 
 
 type Msg
@@ -65,7 +67,9 @@ init =
 
 initialModel : Model
 initialModel =
-    { feed = Nothing }
+    { feed = Nothing
+    , error = Nothing
+    }
 
 
 fetchFeed : Cmd Msg
@@ -89,8 +93,8 @@ update msg model =
         LoadFeed (Ok feed) ->
             ( { model | feed = Just feed }, Cmd.none )
 
-        LoadFeed (Err _) ->
-            ( model, Cmd.none )
+        LoadFeed (Err error) ->
+            ( { model | error = Just error }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -149,9 +153,29 @@ view model =
             [ h1 [] [ text "Picshare" ]
             ]
         , div [ class "content-flow" ]
-            [ viewFeed model.feed
+            [ viewContent model
             ]
         ]
+
+
+viewContent : Model -> Html Msg
+viewContent model =
+    case model.error of
+        Just error ->
+            div [ class "feed-error" ] [ text (errorMessage error) ]
+
+        Nothing ->
+            viewFeed model.feed
+
+
+errorMessage : Http.Error -> String
+errorMessage error =
+    case error of
+        Http.BadPayload _ _ ->
+            "Sorry, something went wrong processing the photo feed."
+
+        _ ->
+            "Sorry, something went wrong loading the photo feed."
 
 
 viewFeed : Maybe Feed -> Html Msg
