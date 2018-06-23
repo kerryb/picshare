@@ -1,11 +1,14 @@
 module Picshare exposing (main)
 
+import Debug
 import Html exposing (..)
 import Html.Attributes exposing (class, disabled, placeholder, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
-import Json.Decode exposing (Decoder, bool, int, list, string)
+import Json.Decode exposing (Decoder, bool, decodeString, int, list, string)
 import Json.Decode.Pipeline exposing (decode, hardcoded, required)
+import String.Extra exposing (pluralize)
+import WebSocket
 
 
 main : Program Never Model Msg
@@ -50,6 +53,7 @@ photoDecoder =
 type alias Model =
     { feed : Maybe Feed
     , error : Maybe Http.Error
+    , streamQueue : Feed
     }
 
 
@@ -58,6 +62,8 @@ type Msg
     | UpdateComment Id String
     | SaveComment Id
     | LoadFeed (Result Http.Error Feed)
+    | LoadStreamPhoto (Result String Photo)
+    | FlushStreamQueue
 
 
 init : ( Model, Cmd Msg )
@@ -69,6 +75,7 @@ initialModel : Model
 initialModel =
     { feed = Nothing
     , error = Nothing
+    , streamQueue = []
     }
 
 
@@ -96,10 +103,32 @@ update msg model =
         LoadFeed (Err error) ->
             ( { model | error = Just error }, Cmd.none )
 
+        LoadStreamPhoto (Ok photo) ->
+            ( { model | streamQueue = photo :: model.streamQueue }
+            , Cmd.none
+            )
+
+        LoadStreamPhoto (Err _) ->
+            ( model, Cmd.none )
+
+        FlushStreamQueue ->
+            ( { model
+                | feed = Maybe.map ((++) model.streamQueue) model.feed
+                , streamQueue = []
+              }
+            , Cmd.none
+            )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model.feed of
+        Just _ ->
+            WebSocket.listen wsUrl
+                (LoadStreamPhoto << decodeString photoDecoder)
+
+        Nothing ->
+            Sub.none
 
 
 updateFeed : (Photo -> Photo) -> Id -> Maybe Feed -> Maybe Feed
@@ -158,6 +187,25 @@ view model =
         ]
 
 
+viewStreamNotification : Feed -> Html Msg
+viewStreamNotification queue =
+    case queue of
+        [] ->
+            text ""
+
+        _ ->
+            let
+                count =
+                    List.length queue
+
+                content =
+                    "View " ++ pluralize "new photo" "new photos" count
+            in
+                div
+                    [ class "stream-notification", onClick FlushStreamQueue ]
+                    [ text content ]
+
+
 viewContent : Model -> Html Msg
 viewContent model =
     case model.error of
@@ -165,7 +213,10 @@ viewContent model =
             div [ class "feed-error" ] [ text (errorMessage error) ]
 
         Nothing ->
-            viewFeed model.feed
+            div []
+                [ viewStreamNotification model.streamQueue
+                , viewFeed model.feed
+                ]
 
 
 errorMessage : Http.Error -> String
@@ -250,3 +301,8 @@ viewComment comment =
 baseUrl : String
 baseUrl =
     "https://programming-elm.com/"
+
+
+wsUrl : String
+wsUrl =
+    "wss://programming-elm.com/"
