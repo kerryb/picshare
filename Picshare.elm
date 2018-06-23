@@ -51,12 +51,11 @@ type alias Model =
     { feed : Maybe Feed }
 
 
-type
-    Msg
-    -- = ToggleLike
-    -- | UpdateComment String
-    -- | SaveComment
-    = LoadFeed (Result Http.Error Feed)
+type Msg
+    = ToggleLike Id
+    | UpdateComment Id String
+    | SaveComment Id
+    | LoadFeed (Result Http.Error Feed)
 
 
 init : ( Model, Cmd Msg )
@@ -78,12 +77,15 @@ fetchFeed =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        -- ToggleLike ->
-        --     ( { model | photo = updateFeed toggleLike model.photo }, Cmd.none )
-        -- UpdateComment comment ->
-        --     ( { model | photo = updateFeed (updateComment comment) model.photo }, Cmd.none )
-        -- SaveComment ->
-        --     ( { model | photo = updateFeed saveNewComment model.photo }, Cmd.none )
+        ToggleLike id ->
+            ( { model | feed = updateFeed toggleLike id model.feed }, Cmd.none )
+
+        UpdateComment id comment ->
+            ( { model | feed = updateFeed (updateComment comment) id model.feed }, Cmd.none )
+
+        SaveComment id ->
+            ( { model | feed = updateFeed saveNewComment id model.feed }, Cmd.none )
+
         LoadFeed (Ok feed) ->
             ( { model | feed = Just feed }, Cmd.none )
 
@@ -96,9 +98,21 @@ subscriptions model =
     Sub.none
 
 
-updateFeed : (Photo -> Photo) -> Maybe Photo -> Maybe Photo
-updateFeed updatePhoto maybePhoto =
-    Maybe.map updatePhoto maybePhoto
+updateFeed : (Photo -> Photo) -> Id -> Maybe Feed -> Maybe Feed
+updateFeed updatePhoto id maybeFeed =
+    Maybe.map (updatePhotoById updatePhoto id) maybeFeed
+
+
+updatePhotoById : (Photo -> Photo) -> Id -> Feed -> Feed
+updatePhotoById updatePhoto id feed =
+    List.map
+        (\photo ->
+            if photo.id == id then
+                updatePhoto photo
+            else
+                photo
+        )
+        feed
 
 
 toggleLike : Photo -> Photo
@@ -172,12 +186,7 @@ viewLikeButton photo =
                 "fa-heart-o"
     in
         div [ class "like-button" ]
-            [ i
-                [ class "fa fa-2x"
-                , class buttonClass
-                  -- , onClick ToggleLike
-                ]
-                []
+            [ i [ class "fa fa-2x", class buttonClass, onClick (ToggleLike photo.id) ] []
             ]
 
 
@@ -186,14 +195,12 @@ viewComments photo =
     div []
         [ viewCommentList photo.comments
         , form
-            [ class "new-comment"
-              -- , onSubmit SaveComment
-            ]
+            [ class "new-comment", onSubmit (SaveComment photo.id) ]
             [ input
                 [ type_ "text"
                 , placeholder "Add a comment"
                 , value photo.newComment
-                  -- , onInput UpdateComment
+                , onInput (UpdateComment photo.id)
                 ]
                 []
             , button [ disabled (String.isEmpty photo.newComment) ] [ text "Save" ]
